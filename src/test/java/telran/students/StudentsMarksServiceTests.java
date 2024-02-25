@@ -23,14 +23,18 @@ import telran.students.service.StudentsServiceImpl;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class StudentsMarksServiceTests {
 
+	private static final long ID_NOT_EXIST = 2;
+
+	private static final long ID_1 = 1;
+
 	@Autowired
 	StudentRepo studentRepo;
 
 	@Autowired
 	StudentsServiceImpl studentsService;
 
-	Student stud1 = new Student(1, "001");
-	Student stud2 = new Student(2, "002");
+	Student stud1 = new Student(ID_1, "001");
+
 	Student updStud1 = new Student(1, "new phone");
 	Mark mark1 = new Mark("Math", 10, LocalDate.now());
 
@@ -52,15 +56,29 @@ class StudentsMarksServiceTests {
 	@Test
 	@Order(3)
 	void updatePhoneNumber_normalState_success() {
-		assertEquals(updStud1, studentsService.updatePhoneNumber(stud1.id(), "new phone"));
+		assertEquals(updStud1, studentsService.updatePhoneNumber(ID_1, "new phone"));
+		assertEquals(updStud1, studentRepo.findById(ID_1).orElseThrow().build());
+	}
 
+	@Test
+	@Order(3)
+	void updatePhoneNumber_notFound_exception() {
+		assertThrowsExactly(StudentNotFoundException.class,
+				() -> studentsService.updatePhoneNumber(ID_NOT_EXIST, "002"));
 	}
 
 	@Test
 	@Order(4)
 	void addMark_normalState_success() {
-		assertEquals(mark1, studentsService.addMark(stud1.id(), mark1));
+		assertFalse(studentRepo.findById(ID_1).orElseThrow().getMarks().contains(mark1));
+		assertEquals(mark1, studentsService.addMark(ID_1, mark1));
+		assertTrue(studentRepo.findById(ID_1).orElseThrow().getMarks().contains(mark1));
+	}
 
+	@Test
+	@Order(4)
+	void addMark_notFound_exception() {
+		assertThrowsExactly(StudentNotFoundException.class, () -> studentsService.addMark(ID_NOT_EXIST, mark1));
 	}
 
 }
