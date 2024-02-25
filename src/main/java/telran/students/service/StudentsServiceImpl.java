@@ -34,8 +34,12 @@ public class StudentsServiceImpl implements StudentsService {
 
 	@Override
 	public Mark addMark(long id, Mark mark) {
-		// TODO Auto-generated method stub
-		return null;
+		StudentDoc studentDoc = studentRepo.findById(id).orElseThrow(() -> new StudentNotFoundException());
+		log.debug("student with id {}, old marks list {}", id, studentDoc.getMarks());
+		studentDoc.getMarks().add(mark);
+		studentRepo.save(studentDoc);
+		log.debug("student with id {}, new marks list {}", id, studentDoc.getMarks());
+		return mark;
 	}
 
 	@Override
