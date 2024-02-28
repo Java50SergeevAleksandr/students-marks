@@ -20,7 +20,7 @@ public interface StudentRepo extends MongoRepository<StudentDoc, Long> {
 
 	List<IdPhone> findByPhoneRegex(String regex);
 
-	@Query(value = "{'marks.date':?0}", fields = "{phone:1}") // id:1  by default
+	@Query(value = "{'marks.date':?0}", fields = "{phone:1}") // id:1 by default
 	List<IdPhone> findStudentByMarkDate(LocalDate date);
 
 	@Query(value = "{'marks': {$elemMatch: {subject:?0, score: {$gte:?1} }}}", fields = "{id:1, phone:1}")
@@ -28,5 +28,11 @@ public interface StudentRepo extends MongoRepository<StudentDoc, Long> {
 
 	@Query(value = "{'marks': {$elemMatch: {date:{$gte:?0}, date:{$lte:?1} }}}", fields = "{id:1, phone:1}")
 	List<IdPhone> findStudentsBetweenDates(LocalDate start, LocalDate end);
+
+	List<IdPhone> findByMarksDate(LocalDate date);
+
+	List<IdPhone> findByMarksDateBetween(LocalDate firstDate, LocalDate lastDate);
+
+	List<IdPhone> findByMarksSubjectAndMarksScoreGreaterThan(String subject, int markThreshold);
 
 }
