@@ -20,13 +20,13 @@ public interface StudentRepo extends MongoRepository<StudentDoc, Long> {
 
 	List<IdPhone> findByPhoneRegex(String regex);
 
-	@Query(value = "{'marks.date':?0}")
-	List<StudentDoc> findStudentByMarkDate(LocalDate date);
+	@Query(value = "{'marks.date':?0}", fields = "{phone:1}") // id:1  by default
+	List<IdPhone> findStudentByMarkDate(LocalDate date);
 
-	@Query(value = "{'marks': {$elemMatch: {subject:?0, score: {$gte:?1} }}}")
-	List<StudentDoc> findStudentsGoodSubjectMark(String subject, int markThreshold);
+	@Query(value = "{'marks': {$elemMatch: {subject:?0, score: {$gte:?1} }}}", fields = "{id:1, phone:1}")
+	List<IdPhone> findStudentsGoodSubjectMark(String subject, int markThreshold);
 
-	@Query(value = "{'marks': {$elemMatch: {date:{$gte:?0}, date:{$lt:?1} }}}")
-	List<StudentDoc> findStudentsBetweenDates(LocalDate start, LocalDate end);
+	@Query(value = "{'marks': {$elemMatch: {date:{$gte:?0}, date:{$lte:?1} }}}", fields = "{id:1, phone:1}")
+	List<IdPhone> findStudentsBetweenDates(LocalDate start, LocalDate end);
 
 }

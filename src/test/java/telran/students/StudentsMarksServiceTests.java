@@ -28,6 +28,10 @@ class StudentsMarksServiceTests {
 
 	private static final long ID_NEW = 555;
 
+	private static final String SUBJECT_NOT_EXIST = "NE";
+
+	private static final LocalDate DATE_NOT_EXIST = LocalDate.of(2024, 02, 20);;
+
 	@Autowired
 	StudentRepo studentRepo;
 
@@ -51,6 +55,7 @@ class StudentsMarksServiceTests {
 		List<Student> expected = List.of(students[0], students[1], students[2], students[5]);
 		List<Student> res = studentsService.getStudentsMarksMonthYear(1, 2024);
 		assertIterableEquals(expected, res);
+		assertTrue(studentsService.getStudentsMarksMonthYear(2, 2020).isEmpty());
 	}
 
 	@Test
@@ -58,6 +63,7 @@ class StudentsMarksServiceTests {
 		List<Student> expected = List.of(students[0], students[5]);
 		List<Student> res = studentsService.getStudentsGoodSubjectMark(SUBJECT1, 80);
 		assertIterableEquals(expected, res);
+		assertTrue(studentsService.getStudentsGoodSubjectMark(SUBJECT_NOT_EXIST, 85).isEmpty());
 	}
 
 	@Test
@@ -65,6 +71,7 @@ class StudentsMarksServiceTests {
 		List<Student> expected = List.of(students[0], students[1], students[2], students[5]);
 		List<Student> res = studentsService.getStudentsMarksDate(DATE1);
 		assertIterableEquals(expected, res);
+		assertTrue(studentsService.getStudentsMarksDate(DATE_NOT_EXIST).isEmpty());
 	}
 
 	@Test

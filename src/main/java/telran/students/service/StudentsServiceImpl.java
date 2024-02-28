@@ -1,6 +1,8 @@
 package telran.students.service;
 
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -62,10 +64,8 @@ public class StudentsServiceImpl implements StudentsService {
 
 	@Override
 	public Student removeStudent(long id) {
-		StudentDoc studentDoc = studentRepo.findById(id).orElseThrow(() -> new StudentNotFoundException());
-		log.trace("Found StudentDoc {} ", studentDoc);
-		studentRepo.delete(studentDoc);
-		Student res = studentDoc.build();
+		Student res = getStudent(id);
+		studentRepo.deleteById(id);
 		log.debug("Student {} has been deleted ", res);
 		return res;
 	}
@@ -127,15 +127,15 @@ public class StudentsServiceImpl implements StudentsService {
 	@Override
 	public List<Student> getStudentsByPhonePrefix(String prefix) {
 		List<IdPhone> idPhones = studentRepo.findByPhoneRegex(prefix + ".+");
-		List<Student> res = idPhones.stream().map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
+		List<Student> res = idPhonesToStudents(idPhones);
 		log.debug("getStudentsByPhonePrefix -> students {}", res);
 		return res;
 	}
 
 	@Override
 	public List<Student> getStudentsMarksDate(LocalDate date) {
-		List<StudentDoc> list = studentRepo.findStudentByMarkDate(date);
-		List<Student> res = list.stream().map(StudentDoc::build).toList();
+		List<IdPhone> idPhones = studentRepo.findStudentByMarkDate(date);
+		List<Student> res = idPhonesToStudents(idPhones);
 		log.debug("getStudentsMarksDate -> students {}", res);
 		return res;
 	}
@@ -143,18 +143,22 @@ public class StudentsServiceImpl implements StudentsService {
 	@Override
 	public List<Student> getStudentsMarksMonthYear(int month, int year) {
 		LocalDate start = LocalDate.of(year, month, 1);
-		LocalDate end = start.plusMonths(1);
-		List<StudentDoc> list = studentRepo.findStudentsBetweenDates(start, end);
-		List<Student> res = list.stream().map(StudentDoc::build).toList();
+		LocalDate end = start.with(TemporalAdjusters.lastDayOfMonth());
+		List<IdPhone> idPhones = studentRepo.findStudentsBetweenDates(start, end);
+		List<Student> res = idPhonesToStudents(idPhones);
 		log.debug("getStudentsMarksMonthYear -> students {}", res);
 		return res;
 	}
 
 	@Override
 	public List<Student> getStudentsGoodSubjectMark(String subject, int markThreshold) {
-		List<StudentDoc> list = studentRepo.findStudentsGoodSubjectMark(subject, markThreshold);
-		List<Student> res = list.stream().map(StudentDoc::build).toList();
+		List<IdPhone> idPhones = studentRepo.findStudentsGoodSubjectMark(subject, markThreshold);
+		List<Student> res = idPhonesToStudents(idPhones);
 		log.debug("getStudentsGoodSubjectMark -> students {}", res);
 		return res;
+	}
+
+	private List<Student> idPhonesToStudents(List<IdPhone> idPhones) {
+		return idPhones.stream().map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
 	}
 }
