@@ -23,6 +23,8 @@ public class TestDb {
 	static final long ID5 = 5;
 	static final long ID6 = 6;
 	static final long ID7 = 7;
+	static final long ID_NOT_EXIST = 322;
+	static final long ID_NEW = 555;
 	// phone numbers
 	static final String PHONE1 = "051-1234567";
 	static final String PHONE2 = "052-1234567";
@@ -36,19 +38,22 @@ public class TestDb {
 	static final String SUBJECT2 = "Subject2";
 	static final String SUBJECT3 = "Subject3";
 	static final String SUBJECT4 = "Subject4";
+	static final String SUBJECT_NOT_EXIST = "NE";
 	// Dates
 	static final LocalDate DATE1 = LocalDate.of(2024, 01, 01);
 	static final LocalDate DATE2 = LocalDate.of(2024, 01, 10);
 	static final LocalDate DATE3 = LocalDate.of(2024, 02, 10);
 	static final LocalDate DATE4 = LocalDate.of(2024, 02, 15);
+	static final LocalDate DATE_NOT_EXIST = LocalDate.of(2024, 02, 20);;
 
 	// marks
-	static Mark[][] marks = { { new Mark(SUBJECT1, 70, DATE1), new Mark(SUBJECT1, 80, DATE2), new Mark(SUBJECT2, 80, DATE3) },
-			{ new Mark(SUBJECT2, 70, DATE1), new Mark(SUBJECT3, 80, DATE2), new Mark(SUBJECT4, 80, DATE3) },
+	static Mark[][] marks = {
+			{ new Mark(SUBJECT1, 70, DATE1), new Mark(SUBJECT1, 80, DATE2), new Mark(SUBJECT2, 80, DATE3) },
+			{ new Mark(SUBJECT2, 70, DATE1), new Mark(SUBJECT3, 85, DATE2), new Mark(SUBJECT4, 80, DATE3) },
 			{ new Mark(SUBJECT3, 70, DATE1), new Mark(SUBJECT4, 80, DATE2), new Mark(SUBJECT1, 70, DATE3),
 					new Mark(SUBJECT4, 80, DATE4), },
 			{ new Mark(SUBJECT1, 70, DATE3), new Mark(SUBJECT4, 70, DATE4), },
-			{ new Mark(SUBJECT4, 100, DATE3) },
+			{ new Mark(SUBJECT4, 95, DATE3) },
 			{ new Mark(SUBJECT1, 100, DATE1), new Mark(SUBJECT2, 100, DATE2), new Mark(SUBJECT3, 100, DATE3),
 					new Mark(SUBJECT4, 100, DATE4), },
 			{} };
