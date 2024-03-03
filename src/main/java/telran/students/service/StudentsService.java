@@ -70,13 +70,47 @@ public interface StudentsService {
 	List<StudentAvgScore> getStudentsAvgScoreGreater(int avgThreshold);
 
 	// methods for HW #72
+	/**
+	 * 
+	 * @param subject
+	 * @param thresholdScore
+	 * @return list of students having all marks greater than thresholdScore for a
+	 *         given subject
+	 */
 	List<Student> getStudentsAllGoodMarksSubject(String subject, int thresholdScore);
 
+	/**
+	 * 
+	 * @param min
+	 * @param max
+	 * @return get students, having amount of marks in the closed range [min, max]
+	 */
 	List<Student> getStudentsMarksAmountBetween(int min, int max);
 
+	/**
+	 * 
+	 * @param id
+	 * @param from
+	 * @param to
+	 * @return gets only marks on the dates in a closed range [from, to] of a given
+	 *         student
+	 */
 	List<Mark> getStudentMarksAtDates(long id, LocalDate from, LocalDate to);
 
-	List<String> getBestStudents(int nStudents);
+	/**
+	 * 
+	 * @param nStudents
+	 * @return gets list of a given number of the best students. Best students are
+	 *         the ones who have most scores greater than 80
+	 */
+	List<Long> getBestStudents(int nStudents);
 
-	List<String> getWorstStudents(int nStudents);
+	/**
+	 * 
+	 * @param nStudents
+	 * @return gets list of a given number of the worst students. Worst students are
+	 *         the ones who have least sum's of all scores. Students who have no
+	 *         scores at all should be considered as worst
+	 */
+	List<Long> getWorstStudents(int nStudents);
 }

@@ -43,6 +43,54 @@ class StudentsMarksServiceTests {
 		testDb.createDb();
 	}
 
+	
+	@Test
+	void getWorstStudents_normalFlow_success() {
+//		List<Long> expected = List.of(7l);
+//		assertIterableEquals(expected, studentsService.getWorstStudents(1));
+
+		List<Long> expected1 = List.of(7l,4l, 3l);
+		assertIterableEquals(expected1, studentsService.getWorstStudents(3));
+	}
+	@Test
+	void getBestStudents_normalFlow_success() {
+		List<Long> expected = List.of(6l, 5l);
+		assertIterableEquals(expected, studentsService.getBestStudents(2));
+
+		List<Long> expected1 = List.of(6l);
+		assertIterableEquals(expected1, studentsService.getBestStudents(1));
+	}
+
+	@Test
+	void getStudentMarksAtDates_normalFlow_success() {
+		List<Mark> expected = List.of(new Mark(SUBJECT1, 70, DATE1), new Mark(SUBJECT1, 80, DATE2));
+		assertIterableEquals(expected, studentsService.getStudentMarksAtDates(ID1, DATE1, DATE2));
+
+		assertTrue(studentsService.getStudentMarksAtDates(ID5, DATE4, DATE_NOT_EXIST).isEmpty());
+	}
+
+	@Test
+	void getStudentMarksAtDates_notFound_exception() {
+		assertThrowsExactly(StudentNotFoundException.class, () -> studentsService.removeStudent(ID_NOT_EXIST));
+	}
+
+	@Test
+	void getStudentsMarksAmountBetween_normalFlow_success() {
+		List<Student> expected = List.of(students[2], students[5]);
+		assertIterableEquals(expected, studentsService.getStudentsMarksAmountBetween(4, 5));
+
+		List<Student> expected1 = List.of(students[4]);
+		assertIterableEquals(expected1, studentsService.getStudentsMarksAmountBetween(1, 1));
+		assertTrue(studentsService.getStudentsMarksAmountBetween(5, 6).isEmpty());
+	}
+
+	@Test
+	void getStudentsAllGoodMarksSubject_normalFlow_success() {
+		List<Student> expected = List.of(students[4], students[5]);
+		assertIterableEquals(expected, studentsService.getStudentsAllGoodMarksSubject(SUBJECT4, 90));
+		assertTrue(studentsService.getStudentsAllGoodMarksSubject(SUBJECT4, 100).isEmpty());
+	}
+
 	@Test
 	void getStudentsAllGoodMarksTest() {
 		List<Student> expected = List.of(students[4], students[5]);
