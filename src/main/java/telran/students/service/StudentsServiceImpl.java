@@ -6,8 +6,9 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Sort.Direction;
-
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -20,8 +21,11 @@ import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.aggregation.UnwindOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,35 +44,38 @@ import telran.students.repo.StudentRepo;
 public class StudentsServiceImpl implements StudentsService {
 	final StudentRepo studentRepo;
 	final MongoTemplate mongoTemplate;
+	FindAndModifyOptions options = new FindAndModifyOptions().returnNew(true).upsert(false);
 
 	@Override
-	@Transactional
 	public Student addStudent(Student student) {
 		long id = student.id();
-
-		if (studentRepo.existsById(id)) {
-			log.error("student with id {} already exists", id);
+		try {
+			mongoTemplate.insert(new StudentDoc(student));
+		} catch (DuplicateKeyException e) {
+			log.error("student with id: {} already exists", id);
 			throw new StudentIllegalStateException();
 		}
-
-		StudentDoc studentDoc = new StudentDoc(student);
-		studentRepo.save(studentDoc);
-		log.debug("student {} has been saved", student);
+		log.debug("student: {} has been added", student);
 		return student;
 	}
 
 	@Override
 	public Mark addMark(long id, Mark mark) {
-		StudentDoc studentDoc = studentRepo.findById(id).orElseThrow(() -> new StudentNotFoundException());
-		log.debug("student with id {}, old marks list {}", id, studentDoc.getMarks());
-		studentDoc.getMarks().add(mark);
-		studentRepo.save(studentDoc);
-		log.debug("student with id {}, new marks list {}", id, studentDoc.getMarks());
+		Query query = new Query(Criteria.where("id").is(id));
+		Update update = new Update();
+		update.push("marks", mark);
+		StudentDoc studentDoc = mongoTemplate.findAndModify(query, update, options, StudentDoc.class);
+
+		if (studentDoc == null) {
+			log.error("Student with id: {} not found", id);
+			throw new StudentNotFoundException();
+		}
+
+		log.debug("mark {} has been added for student with id: {}", mark, id);
 		return mark;
 	}
 
 	@Override
-	@Transactional
 	public Student updatePhoneNumber(long id, String phoneNumber) {
 		StudentDoc studentDoc = studentRepo.findById(id).orElseThrow(() -> new StudentNotFoundException());
 		log.debug("student with id {}, old phone number {}, new phone number {}", id, studentDoc.getPhone(),
@@ -81,10 +88,16 @@ public class StudentsServiceImpl implements StudentsService {
 
 	@Override
 	public Student removeStudent(long id) {
-		Student res = getStudent(id);
-		studentRepo.deleteById(id);
-		log.debug("Student {} has been deleted ", res);
-		return res;
+		Query query = new Query(Criteria.where("id").is(id));
+		StudentDoc studentDoc = mongoTemplate.findAndRemove(query, StudentDoc.class);
+		
+		if (studentDoc == null) {
+			log.error("student with id {} not found", id);
+			throw new StudentNotFoundException();
+		}
+		
+		log.debug("student with id {} has been removed", id);
+		return studentDoc.build();
 	}
 
 	@Override
