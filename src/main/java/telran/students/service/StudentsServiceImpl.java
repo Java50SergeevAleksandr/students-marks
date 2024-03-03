@@ -7,12 +7,12 @@ import java.util.List;
 
 import org.bson.Document;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.MongoExpression;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.LimitOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
@@ -244,10 +244,9 @@ public class StudentsServiceImpl implements StudentsService {
 
 		MatchOperation matchStudentOperation = Aggregation.match(Criteria.where("id").is(id));
 		UnwindOperation unwindOperation = Aggregation.unwind("marks");
-		MatchOperation matchSubject = Aggregation
-				.match(Criteria.where("marks.date").gte(from).andOperator(Criteria.where("marks.date").lte(to)));
+		MatchOperation matchOperation = Aggregation.match(Criteria.where("marks.date").gte(from).lte(to));
 		ProjectionOperation projectOperation = Aggregation.project("marks.subject", "marks.score", "marks.date");
-		Aggregation pipeline = Aggregation.newAggregation(matchStudentOperation, unwindOperation, matchSubject,
+		Aggregation pipeline = Aggregation.newAggregation(matchStudentOperation, unwindOperation, matchOperation,
 				projectOperation);
 		var aggregationResult = mongoTemplate.aggregate(pipeline, StudentDoc.class, Document.class);
 		List<Document> documents = aggregationResult.getMappedResults();
@@ -266,8 +265,9 @@ public class StudentsServiceImpl implements StudentsService {
 		GroupOperation groupOperation = Aggregation.group("id").count().as("nScores");
 		SortOperation sortOperation = Aggregation.sort(Direction.DESC, "nScores");
 		LimitOperation limitOperation = Aggregation.limit(nStudents);
+		ProjectionOperation projectOperation = Aggregation.project("id");
 		Aggregation pipeline = Aggregation.newAggregation(unwindOperation, matchOperation, groupOperation,
-				sortOperation, limitOperation);
+				sortOperation, limitOperation, projectOperation);
 		var aggregResults = mongoTemplate.aggregate(pipeline, StudentDoc.class, Document.class);
 		List<Document> documents = aggregResults.getMappedResults();
 		List<Long> res = documents.stream().map(d -> d.getLong("_id")).toList();
@@ -279,32 +279,16 @@ public class StudentsServiceImpl implements StudentsService {
 
 	@Override
 	public List<Long> getWorstStudents(int nStudents) {
-		// TODO gets list of a given number of the worst students
-		// Worst students are the ones who have least sum's of all scores
-		// Students who have no scores at all should be considered as worst
-		// instead of GroupOperation to apply AggregationExpression
-		// (with AccumulatorOperators.Sum) and
-		// ProjectionOperation for adding new fields with computed values from
-		// AggregationExpression
-
-		UnwindOperation unwindOperation = Aggregation.unwind("marks");
-
-		GroupOperation groupOperation = Aggregation.group("id").count().as("nScores").and("avg",
-				AggregationExpression.from(MongoExpression.create("$avg: '$marks.score'")));
-
-		SortOperation sortOperation = Aggregation.sort(Direction.ASC, "nScores").and(Direction.DESC, "avg");
+		AggregationExpression expression = AccumulatorOperators.Sum.sumOf("marks.score");
+		ProjectionOperation projectionOperation = Aggregation.project("id").and(expression).as("sumScore");
+		SortOperation sortOperation = Aggregation.sort(Direction.ASC, "sumScore");
 		LimitOperation limitOperation = Aggregation.limit(nStudents);
-
-		Aggregation pipeline = Aggregation.newAggregation(unwindOperation, groupOperation, sortOperation,
-				limitOperation);
-		var aggregResults = mongoTemplate.aggregate(pipeline, StudentDoc.class, Document.class);
-		List<Document> documents = aggregResults.getMappedResults();
-		List<Long> res = documents.stream().map(d -> d.getLong("_id")).toList();
-		List<StudentAvgScore> valu = documents.stream()
-				.map(d -> new StudentAvgScore(d.getLong("_id"), d.getDouble("avg").intValue())).toList();
-		log.debug("received {} documents", res.size());
-		log.debug("{} worst students  are {}", nStudents, res);
-		log.debug("{} worst students  are {}", nStudents, valu);
+		ProjectionOperation projectionOperationOnlyId = Aggregation.project("id");
+		Aggregation pipeLine = Aggregation.newAggregation(projectionOperation, sortOperation, limitOperation,
+				projectionOperationOnlyId);
+		List<Long> res = mongoTemplate.aggregate(pipeLine, StudentDoc.class, Document.class).getMappedResults().stream()
+				.map(d -> d.getLong("id")).toList();
+		log.debug("{} worst students are {}", nStudents, res);
 		return res;
 	}
 }

@@ -43,18 +43,15 @@ class StudentsMarksServiceTests {
 		testDb.createDb();
 	}
 
-	
 	@Test
 	void getWorstStudents_normalFlow_success() {
-//		List<Long> expected = List.of(7l);
-//		assertIterableEquals(expected, studentsService.getWorstStudents(1));
-
-		List<Long> expected1 = List.of(7l,4l, 3l);
+		List<Long> expected1 = List.of(7l, 5l, 4l);
 		assertIterableEquals(expected1, studentsService.getWorstStudents(3));
 	}
+
 	@Test
 	void getBestStudents_normalFlow_success() {
-		List<Long> expected = List.of(6l, 5l);
+		List<Long> expected = List.of(6l, 2l);
 		assertIterableEquals(expected, studentsService.getBestStudents(2));
 
 		List<Long> expected1 = List.of(6l);
